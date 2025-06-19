@@ -1,0 +1,180 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  CADISTA
+  LAB
+  ADMIN
+}
+
+enum LabType {
+  DENTIST
+  CLINIC
+  LABORATORY
+  PROTETICO
+}
+
+enum JobType {
+  CROWN
+  LENS
+  FIXED_PROSTHESIS
+  REMOVABLE_PROSTHESIS
+  IMPLANT
+}
+
+enum JobStatus {
+  PENDING
+  ACCEPTED
+  IN_PROGRESS
+  DELIVERED
+  CANCELED
+  EXPIRED
+}
+
+enum TransactionType {
+  CREDIT_PURCHASE
+  JOB_PAYMENT
+  FEE
+  WITHDRAWAL
+}
+
+model User {
+  id              String          @id @default(uuid())
+  name            String
+  email           String          @unique
+  cpfCnpj         String?         @unique
+  password        String
+  type            UserType
+  whatsapp        String
+  termsAccepted   Boolean         @default(false)
+  language        String          @default("ptBR")
+  active          Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  cadistaProfile  Cadista?
+  cadistaId       String?
+  labProfile      Lab?
+  labId           String?
+  transactions    Transaction[]   @relation("UserTransactions")
+
+  @@index([type])
+}
+
+model Cadista {
+  id              String          @id @default(uuid())
+  user            User            @relation(fields: [userId], references: [id])
+  userId          String          @unique
+  skills          CadistaSkill[]
+  jobsAccepted    Job[]
+  transactions    Transaction[]   @relation("CadistaTransactions")
+  bankDetails     Json?
+  address         String?
+  rating          Float?          @default(0)
+
+  @@index([rating])
+}
+
+model Lab {
+  id              String          @id @default(uuid())
+  user            User            @relation(fields: [userId], references: [id])
+  userId          String          @unique
+  credits         Credit[]
+  jobsPosted      Job[]
+  transactions    Transaction[]   @relation("LabTransactions")
+  paymentMethods  Json?
+  labType         LabType
+
+  @@index([labType])
+}
+
+model Credit {
+  id          String     @id @default(uuid())
+  user        Lab        @relation(fields: [userId], references: [id])
+  userId      String
+  type        JobType
+  quantity    Int
+  remaining   Int        
+  createdAt   DateTime   @default(now())
+  expiresAt   DateTime?
+  jobs        Job[]      @relation("CreditToJob")
+
+  @@index([type])
+}
+
+model Job {
+  id              String          @id @default(uuid())
+  title           String
+  type            JobType
+  briefing        String
+  originalFile    String
+  status          JobStatus       @default(PENDING)
+  urgent          Boolean         @default(false)
+  deliveryDate    DateTime
+  value           Float
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  lab             Lab             @relation(fields: [labId], references: [id])
+  labId           String
+  cadista         Cadista?        @relation(fields: [cadistaId], references: [id])
+  cadistaId       String?
+
+  skills          JobSkill[]
+  creditUsed      Credit?         @relation("CreditToJob", fields: [creditId], references: [id])
+  creditId        String?
+
+  transactions    Transaction[]   @relation("JobToTransaction")
+
+  @@index([status])
+}
+
+model Transaction {
+  id           String           @id @default(uuid())
+  type         TransactionType
+  amount       Float
+  description  String?
+  createdAt    DateTime         @default(now())
+
+  job          Job?             @relation("JobToTransaction", fields: [jobId], references: [id])
+  jobId        String?
+  cadista      Cadista?         @relation("CadistaTransactions", fields: [cadistaId], references: [id])
+  cadistaId    String?
+  user         User?            @relation("UserTransactions", fields: [userId], references: [id])
+  userId       String?
+  lab          Lab?             @relation("LabTransactions", fields: [labId], references: [id])
+  labId        String?
+
+  @@index([type])
+}
+
+model Skill {
+  id      String     @id @default(uuid())
+  name    String     @unique
+  jobs    JobSkill[]
+  cadistas CadistaSkill[]
+}
+model JobSkill {
+  job      Job     @relation(fields: [jobId], references: [id])
+  jobId    String
+  skill    Skill   @relation(fields: [skillId], references: [id])
+  skillId  String
+
+  @@id([jobId, skillId])
+}
+
+model CadistaSkill {
+  cadista  Cadista @relation(fields: [cadistaId], references: [id])
+  cadistaId String
+  skill    Skill   @relation(fields: [skillId], references: [id])
+  skillId  String
+
+  @@id([cadistaId, skillId])
+}
+
