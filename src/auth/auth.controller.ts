@@ -9,24 +9,30 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { AuthService } from './auth.service';
 import { AuthGuard } from './auth.guard';
+import { SignUpDto, SignInDto } from './dto/auth.dto';
 
-@Controller('auth')
+@Controller('Auth')
 export class AuthController {
   @Inject()
   private readonly authService: AuthService;
 
+  @Post('signup')
+  @HttpCode(HttpStatus.CREATED)
+  signup(@Body() body: SignUpDto) {
+    return this.authService.signup(body);
+  }
+
   @Post('signin')
   @HttpCode(HttpStatus.OK)
-  signin(@Body() body: Prisma.UserCreateInput) {
+  signin(@Body() body: SignInDto) {
     return this.authService.signin(body);
   }
 
   @UseGuards(AuthGuard)
   @Get('me')
-  getMe(@Request() req: { user: { sub: string } }) {
-    return { userId: req.user.sub }; // Retorna o ID do usuário
+  getMe(@Request() req: { user: { sub: string} }) {
+    return { userId: req.user.sub };
   }
 }

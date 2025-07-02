@@ -3,9 +3,13 @@ import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { DatabaseModule } from 'src/database/database.module';
 import { AuthModule } from 'src/auth/auth.module';
-
+import { JwtModule } from '@nestjs/jwt';
 @Module({
-  imports: [DatabaseModule, forwardRef(() => AuthModule)],
+  imports: [
+    DatabaseModule,
+    forwardRef(() => AuthModule),
+    JwtModule, // 👈 ADICIONE ISSO
+  ],
   controllers: [UserController],
   providers: [UserService],
   exports: [UserService],

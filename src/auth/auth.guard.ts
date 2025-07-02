@@ -8,11 +8,9 @@ import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 
 interface JwtPayload {
-  sub: string; // userId do payload
+  sub: string;
   email?: string;
 }
-
-// Extend Express Request interface to include 'user'
 declare module 'express-serve-static-core' {
   interface Request {
     user?: {
@@ -35,12 +33,11 @@ export class AuthGuard implements CanActivate {
       const payload: JwtPayload = await this.jwtService.verifyAsync<JwtPayload>(
         token,
         {
-          secret: process.env.SECRET_KEY, // Certifique-se de que a chave secreta está no .env
+          secret: process.env.SECRET_KEY,
         },
       );
 
-      // Atribuindo o payload ao objeto 'user' da requisição
-      request.user = { sub: payload.sub, email: payload.email }; // Aqui usamos 'user' em vez de 'sub'
+      request.user = { sub: payload.sub, email: payload.email };
     } catch {
       throw new UnauthorizedException('Invalid or expired token');
     }
