@@ -7,13 +7,12 @@ import { CreateJobDto } from './dto/create-job.dto';
 export class JobService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: CreateJobDto): Promise<any> {
-    const { skills, type, labId, ...jobData } = data;
+  async create(data: CreateJobDto, userId: string): Promise<any> {
+    const { skills, type, ...jobData } = data;
 
-    // 1. Verifica se há crédito disponível para o tipo de trabalho
     const credit = await this.prisma.credit.findFirst({
       where: {
-        userId: labId,
+        userId,
         type: type as JobType,
         remaining: { gt: 0 },
       },
@@ -25,11 +24,10 @@ export class JobService {
       );
     }
 
-    // 2. Cria o job com referência ao crédito usado
     const job = await this.prisma.job.create({
       data: {
         ...jobData,
-        labId,
+        labId: userId,
         type: type as JobType,
         creditId: credit.id,
       },
@@ -38,13 +36,11 @@ export class JobService {
       },
     });
 
-    // 3. Decrementa o crédito
     await this.prisma.credit.update({
       where: { id: credit.id },
       data: { remaining: { decrement: 1 } },
     });
 
-    // 4. Cria as relações de skills
     if (skills && skills.length > 0) {
       await this.prisma.job.update({
         where: { id: job.id },
@@ -60,7 +56,6 @@ export class JobService {
       });
     }
 
-    // 5. Retorna o job completo
     return this.prisma.job.findUnique({
       where: { id: job.id },
       include: {

@@ -8,7 +8,7 @@ import { JwtModule } from '@nestjs/jwt';
   imports: [
     DatabaseModule,
     forwardRef(() => AuthModule),
-    JwtModule, // 👈 ADICIONE ISSO
+    JwtModule,
   ],
   controllers: [UserController],
   providers: [UserService],

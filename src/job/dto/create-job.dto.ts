@@ -29,9 +29,6 @@ export class CreateJobDto {
   @IsNumber()
   value: number;
 
-  @IsUUID()
-  labId: string;
-
   @IsArray()
   @IsUUID('4', { each: true })
   skills: string[];

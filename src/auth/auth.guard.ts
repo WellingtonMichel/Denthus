@@ -10,12 +10,15 @@ import { Request } from 'express';
 interface JwtPayload {
   sub: string;
   email?: string;
+  type?: string;
 }
+
 declare module 'express-serve-static-core' {
   interface Request {
     user?: {
       sub: string;
       email?: string;
+      type?: string;
     };
   }
 }
@@ -33,11 +36,14 @@ export class AuthGuard implements CanActivate {
       const payload: JwtPayload = await this.jwtService.verifyAsync<JwtPayload>(
         token,
         {
-          secret: process.env.SECRET_KEY,
+          secret: process.env.JWT_SECRET,
         },
       );
 
-      request.user = { sub: payload.sub, email: payload.email };
+      request.user = { 
+        sub: payload.sub, 
+        email: payload.email, 
+        type: payload.type, };
     } catch {
       throw new UnauthorizedException('Invalid or expired token');
     }

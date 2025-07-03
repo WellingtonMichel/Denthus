@@ -6,17 +6,30 @@ import {
   Param,
   Delete,
   Patch,
+  UseGuards,
+  ForbiddenException,
 } from '@nestjs/common';
 import { SkillService } from './skill.service';
+import { CreateSkillDto } from './dto/create-skill.dto';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { Prisma } from '@prisma/client';
 
 @Controller('skills')
 export class SkillController {
   constructor(private readonly skillService: SkillService) {}
 
+  @UseGuards(AuthGuard)
   @Post()
-  create(@Body() data: Prisma.SkillCreateInput) {
-    return this.skillService.create(data);
+  async create(
+    @Body() data: CreateSkillDto, @CurrentUser() user: any,) {
+    if (user.type !== 'CADISTA') {
+      throw new ForbiddenException('Apenas cadistas podem criar habilidades')
+    }
+
+    return this.skillService.create({
+      name: data.name,
+    });
   }
 
   @Get()

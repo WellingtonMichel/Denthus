@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { SkillService } from './skill.service';
 import { SkillController } from './skill.controller';
-import { PrismaService } from 'src/database/prisma.service';
-
+import { DatabaseModule } from 'src/database/database.module';
+import { AuthModule } from 'src/auth/auth.module';
 @Module({
+  imports: [DatabaseModule, AuthModule],
   controllers: [SkillController],
-  providers: [SkillService, PrismaService],
+  providers: [SkillService],
 })
 export class SkillModule {}

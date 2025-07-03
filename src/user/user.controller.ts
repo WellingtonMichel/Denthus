@@ -13,7 +13,8 @@ import {
 import { UserService } from './user.service';
 import { Prisma, UserType } from '@prisma/client';
 import { CreateUserDto } from './dto/create-user.dto';
-import { AuthGuard } from 'src/auth/auth.guard'
+import { AuthGuard } from 'src/auth/auth.guard';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 
 @Controller('users')
 export class UserController {
@@ -46,11 +47,12 @@ export class UserController {
 
   @UseGuards(AuthGuard)
   @Get('me')
-  getMyProfile(@Request() req: any) {
+  getMyProfile(@CurrentUser() user: any) {
     return {
       message: 'Usuário autenticado com sucesso!',
-      userId: req.user.sub,
-      email: req.user.email,
+      userId: user.sub,
+      email: user.email,
+      type: user.type,
     };
   }
 }
